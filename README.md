@@ -7,4 +7,3 @@ needed to create Modern Programming's Complete Idle Clicker game on Udemy.
 ### To-Do
 - Update README
 - Create complete project
-- Add distro folder for .unitypackages
