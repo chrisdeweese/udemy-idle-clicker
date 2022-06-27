@@ -1,13 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class UIController : MonoBehaviour
 {
-    public TextMeshProUGUI itemCountLabel;
+    public Text itemCountLabel;
 
     private void Start()
     {
