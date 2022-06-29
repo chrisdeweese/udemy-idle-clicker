@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.Linq;
 
 namespace ModernProgramming
 {
@@ -9,10 +10,16 @@ namespace ModernProgramming
     {
         #region ## VARIABLES ##
 
-        private const int MAX_SEGMENTS = 42;
-
         [Range(0, 999)] public List<int> number;
-
+        
+        private const int MAX_SEGMENTS = 42;
+        
+        private int MultiplyMaxLength = 0;
+        private int[] Top;
+        private int[] Bottom;
+        private int[] Answer;
+        private int[] Carry;
+        
         #endregion
         
         #region ## PUBLIC ENUMS ##
@@ -319,6 +326,61 @@ namespace ModernProgramming
                 RemoveLeadingZeros();
             }
         }
+        
+        /// <summary>
+        /// Multiplies two large numbers together.
+        /// </summary>
+        /// <param name="numberA">First large number.</param>
+        /// <param name="numberB">Second large number.</param>
+        /// <returns></returns>
+        public LargeNumber MultiplyLargeNumber(LargeNumber numberA, LargeNumber numberB)
+        {
+            // Convert the parameters into strings.
+            string top = numberA.LargeNumberToString();
+            string bottom = numberB.LargeNumberToString();
+            
+            // Setup our int arrays.
+            this.MultiplyMaxLength = top.Length + bottom.Length;
+            this.Top = new int[top.Length];
+            this.Bottom = new int[bottom.Length];
+            this.Answer = new int[this.MultiplyMaxLength];
+            this.Carry = new int[this.MultiplyMaxLength];
+            
+            // Initialize Answer array with zeroes.
+            for (int i = 0; i < MultiplyMaxLength; i++)
+            {
+                this.Answer[i] = 0;
+            }
+            
+            // Convert string into int, then store in top array.
+            for (int i = 0; i < top.Length; i++)
+            {
+                this.Top[i] = int.Parse(top[i].ToString());
+            }
+            
+            // Convert string into int, then store into bottom array.
+            for (int i = 0; i < bottom.Length; i++)
+            {
+                this.Bottom[i] = int.Parse(bottom[i].ToString());
+            }
+            
+            // Create a new large number and int array for our answer.
+            LargeNumber result = new LargeNumber();
+            int[] resultArray = Multiply();
+            
+            // Create a new StringBuilder and convert our int array into the string.
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < resultArray.Length; i++)
+            {
+                sb.Append(resultArray[i].ToString());
+            }
+            
+            // Convert the built string into a large number.
+            result = result.StringToLargeNumber(sb.ToString());
+            
+            // Return the large number.
+            return result;
+        }
 
         /// <summary>
         /// Checks if a large number is greater than this large number.
@@ -581,6 +643,73 @@ namespace ModernProgramming
             {
                 number[count] = total;
             }
+        }
+        
+        private int[] Multiply()
+        {
+            int bottomIndex = this.Bottom.Length - 1;
+            int placeOffset = 1;
+
+            while (bottomIndex >= 0)
+            {
+                // Reset the carry to 0.
+                for (int i = 0; i < this.MultiplyMaxLength; i++)
+                {
+                    this.Carry[i] = 0;
+                }
+                
+                // Store our next digit index to calculate.
+                int answerIndex = this.MultiplyMaxLength - placeOffset;
+
+                // Iterate through each digit index.
+                for (int topIndex = this.Top.Length - 1; topIndex >= 0; topIndex--)
+                {
+                    // Calculate the multiplied value for the current digit index and carry remainder.
+                    int topNumber = this.Top[topIndex];
+                    int bottomNumber = this.Bottom[bottomIndex];
+                    int value = (topNumber * bottomNumber) + this.Carry[answerIndex];
+                    int tens = (value / 10) % 10;
+                    int ones = value - (tens * 10);
+                    this.Carry[answerIndex - 1] += tens;
+
+                    // We have an overflow so calculate the overflow value.
+                    if ((this.Answer[answerIndex] + ones) > 9)
+                    {
+                        PerformOverflow(answerIndex, ones);
+                    }
+                    else
+                    {
+                        this.Answer[answerIndex] += ones;
+                    }
+
+                    // This is the final result of the current digit index.
+                    if (topIndex == 0)
+                    {
+                        this.Answer[answerIndex - 1] += tens;
+                    }
+
+                    // Move down the index and repeat.
+                    answerIndex--;
+                }
+
+                // Move down the index and increase the offset.
+                bottomIndex--;
+                placeOffset++;
+            }
+
+            // Return the final calculated value as an int array.
+            return this.Answer;
+        }
+        
+        private void PerformOverflow(int answerIndex, int ones)
+        {
+            // Adding the answer to it itself
+            int overflow = this.Answer[answerIndex] + ones;
+            int tensOver = (overflow / 10) % 10;
+            int onesOver = (overflow - (tensOver * 10));
+
+            this.Answer[answerIndex] = onesOver;
+            this.Answer[answerIndex - 1] += tensOver;
         }
 
         #endregion
